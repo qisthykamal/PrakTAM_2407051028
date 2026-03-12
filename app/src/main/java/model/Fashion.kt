@@ -1,5 +1,4 @@
-package com.example.praktam_2407051028.Model
-
+package com.example.praktam_2407051028.model
 import androidx.annotation.DrawableRes
 
 data class Fashion(

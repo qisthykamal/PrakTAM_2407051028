@@ -5,8 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,53 +22,95 @@ import androidx.compose.ui.unit.dp
 import com.example.praktam_2407051028.ui.theme.PrakTAM_2407051028Theme
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.size
+import com.example.praktam_2407051028.model.Fashion
+import com.example.praktam_2407051028.model.Fashionsource
+import androidx.compose.ui.tooling.preview.Preview
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             PrakTAM_2407051028Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     FashionList(
-                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
-}
+
 
 @Composable
-fun FashionList(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
+fun FashionList() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp)
+    )
+
+    {
         Fashionsource.QisFashion.forEach { fashion ->
-
-            Image(
-                painter = painterResource(id = fashion.imageRes),
-                contentDescription = fashion.nama,
-                modifier = Modifier.size(120.dp),
-                contentScale = ContentScale.Crop
-            )
-            Text(text = "Nama: ${fashion.nama}")
-            Text(text = "Deskripsi: ${fashion.deskripsi}")
-            Text(text = "Harga: Rp ${fashion.harga}")
-
+            DetailFashion(fashion = fashion)
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
-data class Fashion(
-    val nama: String,
-    val deskripsi: String,
-    val harga: Int,
-    val imageRes: Int
-)
+            @Composable
+            fun DetailFashion(fashion: Fashion) {
+                Column(modifier = Modifier.fillMaxWidth()) {
 
-object Fashionsource {
-    val QisFashion = listOf(
-        Fashion("Kerudung", "Viscose", 100000, R.drawable.kerudung),
-        Fashion("Rok", "Princess", 150000, R.drawable.rok),
-        Fashion("Gamis", "Umbrella", 100000, R.drawable.gamis)
-    )
-}
+                    Image(
+                        painter = painterResource(id = fashion.imageRes),
+                        contentDescription = fashion.nama,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = fashion.nama,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = fashion.deskripsi,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Harga: Rp ${fashion.harga}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    {
+                        Text("Pesan Sekarang")
+                    }
+                }
+
+            }
+
+            @Preview(showBackground = true)
+            @Composable
+            fun DaftarMakananPreview() {
+                PrakTAM_2407051028Theme() {
+                    FashionList()
+                }
+            }
