@@ -87,6 +87,9 @@ fun FashionList() {
             )
 
             LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(Fashionsource.QisFashion) { fashion ->
@@ -111,7 +114,7 @@ fun FashionList() {
         @Composable
         fun FashionRowItem(fashion: Fashion) {
             Card(
-                modifier = Modifier.width(160.dp),
+                modifier = Modifier.width(180.dp),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
@@ -121,19 +124,27 @@ fun FashionList() {
                         contentDescription = fashion.nama,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
+                            .height(80.dp),
                         contentScale = ContentScale.Crop
                     )
-                    Column(modifier = Modifier.padding(8.dp)) {
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White) // 🔥 INI KUNCI
+                            .padding(8.dp)
+                    ) {
                         Text(
                             text = fashion.nama,
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
                         )
+
                         Text(
                             text = "Rp ${fashion.harga}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                            color = Color.Black,
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
@@ -197,8 +208,9 @@ fun FashionList() {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Harga: Rp ${fashion.harga}",
-                        style = MaterialTheme.typography.bodyLarge
+                        text = "Rp ${fashion.harga}",
+                        color = Color.Black,
+                        style = MaterialTheme.typography.bodySmall
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
