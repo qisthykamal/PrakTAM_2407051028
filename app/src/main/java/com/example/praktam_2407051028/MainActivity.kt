@@ -54,6 +54,23 @@ import com.example.praktam_2407051028.model.Fashionsource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.praktam_2407051028.ui.theme.PrakTAM_2407051028Theme
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavController
+import androidx.compose.foundation.clickable
+import androidx.navigation.NavHostController
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,16 +78,41 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PrakTAM_2407051028Theme {
-                    FashionList(
-                    )
-                }
+                val navController = rememberNavController()
+                AppNavigation(navController)
             }
+        }
         }
     }
 
+@Composable
+fun AppNavigation(navController: NavHostController) {
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+
+        composable("home") {
+            FashionList(navController)
+        }
+
+        composable("detail/{nama}") { backStackEntry ->
+            val nama = backStackEntry.arguments?.getString("nama")
+
+            val fashion = Fashionsource.QisFashion.find {
+                it.nama == nama
+            }
+
+            if (fashion != null) {
+                DetailFashion(fashion, navController, true)
+            }
+        }
+    }
+}
+
 
 @Composable
-fun FashionList() {
+fun FashionList(navController: NavHostController) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -93,7 +135,7 @@ fun FashionList() {
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(Fashionsource.QisFashion) { fashion ->
-                    FashionRowItem(fashion)
+                    FashionRowItem(fashion, navController)
                 }
             }
 
@@ -107,130 +149,179 @@ fun FashionList() {
         }
 
         items(Fashionsource.QisFashion) { fashion ->
-            DetailFashion(fashion)
+            DetailFashion(fashion, navController, true)
         }
     }
 }
-        @Composable
-        fun FashionRowItem(fashion: Fashion) {
-            Card(
-                modifier = Modifier.width(180.dp),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+
+@Composable
+fun FashionRowItem(
+    fashion: Fashion,
+    navController: NavHostController
+) {
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable {
+                navController.navigate("detail/${fashion.nama}")
+            },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column {
+            Image(
+                painter = painterResource(id = fashion.imageRes),
+                contentDescription = fashion.nama,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(8.dp)
             ) {
-                Column {
-                    Image(
-                        painter = painterResource(id = fashion.imageRes),
-                        contentDescription = fashion.nama,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(80.dp),
-                        contentScale = ContentScale.Crop
+                Text(
+                    text = fashion.nama,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                Text(
+                    text = "Rp ${fashion.harga}",
+                    color = Color.Black,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
+}
+@Composable
+fun DetailFashion(
+    fashion: Fashion,
+    navController: NavController,
+    isFullScreen: Boolean = false
+) {
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var isFavorite by remember { mutableStateOf(false) }
+
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        )
+        {
+
+            Box {
+                Image(
+                    painter = painterResource(id = fashion.imageRes),
+                    contentDescription = fashion.nama,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
+                )
+
+                IconButton(
+                    onClick = { isFavorite = !isFavorite },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite)
+                            Icons.Filled.Favorite
+                        else
+                            Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) Color.Red else Color.White
                     )
+                }
+            }
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White) // 🔥 INI KUNCI
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            text = fashion.nama,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+            Spacer(modifier = Modifier.height(16.dp))
 
-                        Text(
-                            text = "Rp ${fashion.harga}",
-                            color = Color.Black,
-                            style = MaterialTheme.typography.bodySmall
+            Text(
+                text = fashion.nama,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(text = fashion.deskripsi)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Rp ${fashion.harga}",
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        isLoading = true
+                        delay(2000)
+                        isLoading = false
+                        snackbarHostState.showSnackbar(
+                            "Pesanan berhasil diproses!"
                         )
                     }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
+            )
+                 {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Memproses...")
+                } else {
+                    Text("Pesan Sekarang")
                 }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Kembali")
             }
         }
 
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
 
-        @Composable
-        fun DetailFashion(fashion: Fashion) {
-            var isFavorite by remember { mutableStateOf(false) }
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Box {
-                        Image(
-                            painter = painterResource(id = fashion.imageRes),
-                            contentDescription = fashion.nama,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentScale = ContentScale.Crop
-                        )
-
-                        IconButton(
-                            onClick = { isFavorite = !isFavorite },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                        )
-                        {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Favorite Icon",
-                                tint = if (isFavorite) Color.Red else Color.White
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = fashion.nama,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = fashion.deskripsi,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Rp ${fashion.harga}",
-                        color = Color.Black,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    {
-                        Text("Pesan Sekarang")
-                    }
-                }
-
-            }
-
+    }
+}
             @Preview(showBackground = true)
             @Composable
             fun DaftarMakananPreview() {
-                PrakTAM_2407051028Theme() {
-                    FashionList()
+                PrakTAM_2407051028Theme {
+                    val navController = rememberNavController()
+                    FashionList(navController)
                 }
-            }
-        }
+                }
+
